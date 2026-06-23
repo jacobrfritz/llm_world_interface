@@ -1,4 +1,4 @@
-# src/base_python_project/main.py
+# src/llm_world_interface/main.py
 import logging
 from pathlib import Path
 

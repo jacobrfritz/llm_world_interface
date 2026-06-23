@@ -1,5 +1,5 @@
 [project]
-name = "base_python_project"
+name = "llm_world_interface"
 version = "0.1.0"
 description = "A default Python project template using uv."
 readme = "README.md"
@@ -7,7 +7,7 @@ requires-python = ">=3.12"
 dependencies = []
 
 [project.scripts]
-base_python_project = "base_python_project.cli:main"
+llm_world_interface = "llm_world_interface.cli:main"
 
 [project.optional-dependencies]
 # Analytics & Data Manipulation

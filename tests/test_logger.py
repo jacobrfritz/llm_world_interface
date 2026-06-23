@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
-from base_python_project.logger import (
+from llm_world_interface.logger import (
     ConsoleFormatter,
     JSONFormatter,
     SafeJSONEncoder,

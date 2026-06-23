@@ -22,4 +22,4 @@ typecheck:
 	uv run mypy src
 
 run:
-	uv run base_python_project
+	uv run llm_world_interface

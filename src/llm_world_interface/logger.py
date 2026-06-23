@@ -1,4 +1,4 @@
-# src/base_python_project/logger.py
+# src/llm_world_interface/logger.py
 import json
 import logging
 import os
