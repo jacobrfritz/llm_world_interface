@@ -17,9 +17,13 @@ repos:
         args: [ --fix ]
       - id: ruff-format
 
-  # 3. MyPy: Type checks (Runs on changed files)
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.9.0
+  # 3. MyPy: Type checks (Runs on changed files using local virtualenv)
+  - repo: local
     hooks:
       - id: mypy
-        additional_dependencies: []
+        name: mypy
+        entry: uv run mypy
+        language: system
+        types: [python]
+        # Prevents running mypy on each file individually if multiple are modified
+        pass_filenames: true

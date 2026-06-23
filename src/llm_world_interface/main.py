@@ -2,13 +2,18 @@
 import logging
 from pathlib import Path
 
+from .config.settings import settings
+from .connectors.gcal_connector import GoogleCalendarConnector
+from .connectors.obsidian_connector import ObsidianConnector
+from .core.agent import LifeManagerAgent
+from .core.llm_factory import LLMFactory
 from .logger import get_logger, setup_logging
 
 logger = get_logger(__name__)
 
 
 def run() -> None:
-    """Core application logic demonstrating the robust logging system."""
+    """Core application logic demonstrating robust logging and orchestrator."""
     # Configure logging: console logs at INFO level, file logs at DEBUG level
     log_file = Path("logs/app.log")
     setup_logging(
@@ -20,26 +25,53 @@ def run() -> None:
         backup_count=5,
     )
 
-    logger.info("Initializing application demo...")
-    logger.debug("This is a debug log, visible in the JSON file but not console.")
+    logger.info("Initializing Life Manager Orchestrator application...")
+
+    # 1. Initialize concrete connectors (Dependency Injection)
+    vault_path = settings.obsidian_vault_path
+    logger.info("Initializing Obsidian Connector...", extra={"vault_path": vault_path})
+    obsidian = ObsidianConnector(vault_root=vault_path)
+
+    logger.info("Initializing Google Calendar Connector...")
+    gcal = GoogleCalendarConnector()
+
+    # 2. Initialize the preferred LLM (Gemini by default)
+    provider = settings.llm_provider
+    model_name = settings.llm_model_name
+    temperature = settings.llm_temperature
+
     logger.info(
-        "User logged in successfully",
+        "Initializing LLM provider...",
         extra={
-            "user_id": 42,
-            "ip_address": "127.0.0.1",
-            "session_id": "sess-xyz",
+            "provider": provider,
+            "model_name": model_name,
+            "temperature": temperature,
         },
-    )
-    logger.warning(
-        "Disk usage approaching threshold",
-        extra={"disk_used_percent": 84.7},
     )
 
     try:
-        # Simulate an exception
-        logger.info("Performing a risky mathematical operation...")
-        _ = 1 / 0
-    except ZeroDivisionError:
-        logger.exception("A mathematical error occurred during calculation")
+        llm = LLMFactory.get_llm(
+            provider=provider, model_name=model_name, temperature=temperature
+        )
+    except Exception as e:
+        logger.error(f"Failed to initialize LLM: {e}")
+        raise e
 
-    logger.critical("Demo execution completed successfully.")
+    # 3. Inject dependencies into the LangGraph orchestrator
+    logger.info("Setting up LangGraph Agent Orchestrator...")
+    agent = LifeManagerAgent(llm=llm, connectors=[obsidian, gcal])
+
+    # 4. Execute test run
+    user_request = (
+        "Draft a research note on decentralized energy and schedule 1 hour on "
+        "Friday to review it."
+    )
+    logger.info("Executing test request...", extra={"request": user_request})
+
+    try:
+        response = agent.run(user_request)
+        logger.info("Test execution completed successfully.")
+        print(f"\nFinal Agent Response: {response}")
+    except Exception as e:
+        logger.exception("An error occurred during agent execution")
+        raise e

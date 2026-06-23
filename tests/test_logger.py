@@ -172,7 +172,7 @@ def test_console_formatter_basic() -> None:
     assert "\033[" in formatted_color_str  # Ensure ANSI colors are present
 
 
-@pytest.fixture  # type: ignore[misc]
+@pytest.fixture
 def clean_logger_handlers() -> Generator[None, None, None]:
     """Fixture to ensure root logger handlers are clean before and after tests."""
     root_logger = logging.getLogger()

@@ -4,7 +4,15 @@ version = "0.1.0"
 description = "A default Python project template using uv."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "langchain-core>=0.3.0",
+    "langgraph>=0.1.0",
+    "langchain-google-genai>=0.3.0",
+    "langchain-openai>=0.3.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+]
+
 
 [project.scripts]
 llm_world_interface = "llm_world_interface.cli:main"
