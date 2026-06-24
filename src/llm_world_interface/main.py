@@ -33,7 +33,11 @@ def run() -> None:
     obsidian = ObsidianConnector(vault_root=vault_path)
 
     logger.info("Initializing Google Calendar Connector...")
-    gcal = GoogleCalendarConnector()
+    gcal = GoogleCalendarConnector(
+        credentials_path=settings.gcal_credentials_path,
+        token_path=settings.gcal_token_path,
+        calendar_id=settings.gcal_calendar_id,
+    )
 
     # 2. Initialize the preferred LLM (Gemini by default)
     provider = settings.llm_provider

@@ -1,6 +1,7 @@
 import os
 import tempfile
 from datetime import date, datetime
+from typing import Any
 
 import pytest
 from llm_world_interface.connectors.gcal_connector import GoogleCalendarConnector
@@ -53,8 +54,66 @@ def test_obsidian_connector_validation_error() -> None:
 
 
 def test_gcal_connector_success() -> None:
-    connector = GoogleCalendarConnector()
+    # Create a mock Google Calendar service
+    class MockEvent:
+        def get(self, key: str) -> str:
+            if key == "id":
+                return "mock_id_123"
+            elif key == "htmlLink":
+                return "https://calendar.google.com/event"
+            return ""
 
+    class MockEventsResource:
+        def insert(self, calendarId: str, body: dict[str, Any]) -> "MockEventsResource":  # noqa: N803
+            self.calendar_id = calendarId
+            self.body = body
+            return self
+
+        def execute(self) -> MockEvent:
+            return MockEvent()
+
+    class MockCalendarService:
+        def __init__(self) -> None:
+            self._events = MockEventsResource()
+
+        def events(self) -> MockEventsResource:
+            return self._events
+
+    mock_service = MockCalendarService()
+    connector = GoogleCalendarConnector(service=mock_service)
+
+    event_data = {
+        "summary": "Decentralized Energy Review",
+        "start_time": datetime(2026, 6, 26, 14, 0, 0),
+        "end_time": datetime(2026, 6, 26, 15, 0, 0),
+        "description": "Weekly status review",
+        "location": "Online",
+    }
+
+    result = connector.execute(**event_data)
+
+    assert result["status"] == "success"
+    assert result["event_id"] == "mock_id_123"
+    assert result["html_link"] == "https://calendar.google.com/event"
+    assert mock_service.events().calendar_id == "primary"
+    assert mock_service.events().body["summary"] == "Decentralized Energy Review"
+    assert mock_service.events().body["description"] == "Weekly status review"
+    assert mock_service.events().body["location"] == "Online"
+
+
+def test_gcal_connector_api_failure() -> None:
+    class MockEventsResource:
+        def insert(self, calendarId: str, body: dict[str, Any]) -> "MockEventsResource":  # noqa: N803
+            return self
+
+        def execute(self) -> Any:
+            raise Exception("Google API Error")
+
+    class MockCalendarService:
+        def events(self) -> MockEventsResource:
+            return MockEventsResource()
+
+    connector = GoogleCalendarConnector(service=MockCalendarService())
     event_data = {
         "summary": "Decentralized Energy Review",
         "start_time": datetime(2026, 6, 26, 14, 0, 0),
@@ -63,8 +122,9 @@ def test_gcal_connector_success() -> None:
 
     result = connector.execute(**event_data)
 
-    assert result["status"] == "success"
-    assert result["event_id"] == "mock_id_123"
+    assert result["status"] == "error"
+    assert "Google Calendar API call failed" in result["message"]
+    assert "Google API Error" in result["message"]
 
 
 def test_gcal_connector_validation_error() -> None:

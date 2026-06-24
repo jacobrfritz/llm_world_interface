@@ -11,5 +11,10 @@ class Settings(BaseSettings):
     llm_model_name: str = "gemini-2.5-flash"
     llm_temperature: float = 0.2
 
+    # Google Calendar
+    gcal_credentials_path: str = "credentials.json"
+    gcal_token_path: str = "token.json"
+    gcal_calendar_id: str = "primary"
+
 
 settings = Settings()
