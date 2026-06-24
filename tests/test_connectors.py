@@ -72,12 +72,24 @@ def test_gcal_connector_success() -> None:
         def execute(self) -> MockEvent:
             return MockEvent()
 
+    class MockCalendarsResource:
+        def get(self, calendarId: str) -> "MockCalendarsResource":  # noqa: N803
+            self.calendar_id = calendarId
+            return self
+
+        def execute(self) -> dict[str, Any]:
+            return {"timeZone": "America/New_York"}
+
     class MockCalendarService:
         def __init__(self) -> None:
             self._events = MockEventsResource()
+            self._calendars = MockCalendarsResource()
 
         def events(self) -> MockEventsResource:
             return self._events
+
+        def calendars(self) -> MockCalendarsResource:
+            return self._calendars
 
     mock_service = MockCalendarService()
     connector = GoogleCalendarConnector(service=mock_service)
@@ -99,6 +111,49 @@ def test_gcal_connector_success() -> None:
     assert mock_service.events().body["summary"] == "Decentralized Energy Review"
     assert mock_service.events().body["description"] == "Weekly status review"
     assert mock_service.events().body["location"] == "Online"
+    assert mock_service.events().body["start"]["timeZone"] == "America/New_York"
+    assert mock_service.events().body["end"]["timeZone"] == "America/New_York"
+
+
+def test_gcal_connector_timezone_aware() -> None:
+    from datetime import timedelta, timezone
+
+    class MockEvent:
+        def get(self, key: str) -> str:
+            if key == "id":
+                return "mock_id_123"
+            return ""
+
+    class MockEventsResource:
+        def insert(self, calendarId: str, body: dict[str, Any]) -> "MockEventsResource":  # noqa: N803
+            self.body = body
+            return self
+
+        def execute(self) -> MockEvent:
+            return MockEvent()
+
+    class MockCalendarService:
+        def __init__(self) -> None:
+            self._events = MockEventsResource()
+
+        def events(self) -> MockEventsResource:
+            return self._events
+
+    mock_service = MockCalendarService()
+    connector = GoogleCalendarConnector(service=mock_service)
+
+    tz = timezone(timedelta(hours=2))
+    event_data = {
+        "summary": "TZ Aware Event",
+        "start_time": datetime(2026, 6, 26, 14, 0, 0, tzinfo=tz),
+        "end_time": datetime(2026, 6, 26, 15, 0, 0, tzinfo=tz),
+    }
+
+    result = connector.execute(**event_data)
+
+    assert result["status"] == "success"
+    assert "+02:00" in mock_service.events().body["start"]["dateTime"]
+    assert "timeZone" not in mock_service.events().body["start"]
 
 
 def test_gcal_connector_api_failure() -> None:

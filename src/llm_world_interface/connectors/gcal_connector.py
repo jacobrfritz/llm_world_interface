@@ -92,6 +92,18 @@ class GoogleCalendarConnector(BaseConnector):
     def execute(self, **kwargs: Any) -> dict[str, Any]:
         validated_data = CalendarEventSchema(**kwargs)
 
+        try:
+            service = self._get_service()
+        except Exception as e:
+            logger.exception("Failed to initialize Google Calendar service")
+            return {
+                "status": "error",
+                "message": f"Failed to initialize Google Calendar service: {e}",
+            }
+
+        start_tz = validated_data.start_time.tzinfo
+        end_tz = validated_data.end_time.tzinfo
+
         event_body: dict[str, Any] = {
             "summary": validated_data.summary,
             "start": {
@@ -102,13 +114,31 @@ class GoogleCalendarConnector(BaseConnector):
             },
         }
 
+        # If either start or end time is naive, we must provide a timezone definition.
+        if start_tz is None or end_tz is None:
+            try:
+                # Fetch calendar metadata to get its timezone
+                calendar = (
+                    service.calendars().get(calendarId=self.calendar_id).execute()
+                )
+                calendar_timezone = calendar.get("timeZone", "UTC")
+            except Exception as e:
+                logger.warning(
+                    f"Failed to fetch calendar timezone, defaulting to UTC: {e}"
+                )
+                calendar_timezone = "UTC"
+
+            if start_tz is None:
+                event_body["start"]["timeZone"] = calendar_timezone
+            if end_tz is None:
+                event_body["end"]["timeZone"] = calendar_timezone
+
         if validated_data.description:
             event_body["description"] = validated_data.description
         if validated_data.location:
             event_body["location"] = validated_data.location
 
         try:
-            service = self._get_service()
             event = (
                 service.events()
                 .insert(calendarId=self.calendar_id, body=event_body)

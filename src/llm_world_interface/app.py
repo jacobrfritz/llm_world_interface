@@ -3,7 +3,6 @@ import chainlit as cl
 from langchain_core.runnables import RunnableConfig
 
 from llm_world_interface.config.settings import settings
-from llm_world_interface.connectors.gcal_connector import GoogleCalendarConnector
 from llm_world_interface.connectors.obsidian_connector import ObsidianConnector
 from llm_world_interface.core.agent import LifeManagerAgent
 from llm_world_interface.core.llm_factory import LLMFactory
@@ -18,7 +17,7 @@ async def on_chat_start() -> None:
     # 1. Initialize concrete connectors (Dependency Injection)
     vault_path = settings.obsidian_vault_path
     obsidian = ObsidianConnector(vault_root=vault_path)
-    gcal = GoogleCalendarConnector()
+    # gcal = GoogleCalendarConnector()
 
     # 2. Initialize the preferred LLM
     provider = settings.llm_provider
@@ -31,7 +30,7 @@ async def on_chat_start() -> None:
             provider=provider, model_name=model_name, temperature=temperature
         )
         # 3. Inject dependencies into the LangGraph orchestrator
-        agent = LifeManagerAgent(llm=llm, connectors=[obsidian, gcal])
+        agent = LifeManagerAgent(llm=llm, connectors=[obsidian])  # , gcal])
         cl.user_session.set("agent", agent)  # type: ignore[no-untyped-call]
 
         await cl.Message(

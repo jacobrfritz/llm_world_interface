@@ -1,3 +1,5 @@
+import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,6 +13,10 @@ class Settings(BaseSettings):
     llm_model_name: str = "gemini-2.5-flash"
     llm_temperature: float = 0.2
 
+    # API Keys
+    gemini_api_key: str | None = None
+    openai_api_key: str | None = None
+
     # Google Calendar
     gcal_credentials_path: str = "credentials.json"
     gcal_token_path: str = "token.json"
@@ -18,3 +24,9 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Export API keys to environment variables so external LLM libraries can detect them
+if settings.gemini_api_key:
+    os.environ["GEMINI_API_KEY"] = settings.gemini_api_key
+if settings.openai_api_key:
+    os.environ["OPENAI_API_KEY"] = settings.openai_api_key

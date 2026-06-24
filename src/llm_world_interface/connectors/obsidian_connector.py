@@ -16,7 +16,11 @@ class ObsidianConnector(BaseConnector):
     def description(self) -> str:
         return (
             "Use this to create or update a research note, task, or "
-            "mind map node in the user's Obsidian vault."
+            "mind map node in the user's Obsidian vault. Obsidian is used "
+            "for capturing information, organizing ideas, and linking them "
+            "together logically. You can use it to store reminders, task lists, "
+            "and schedule ideas for a future time by specifying a due date "
+            "and linking them to related notes."
         )
 
     @property

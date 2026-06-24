@@ -91,3 +91,18 @@ def test_agent_orchestration_with_config() -> None:
     # Assert LLM was called and response is correct
     assert llm.calls_count >= 2
     assert response == "Successfully processed and stored the note."
+
+
+def test_agent_system_prompt_configuration() -> None:
+    llm = MockLLM()
+    connector = DummyToolConnector()
+
+    agent = LifeManagerAgent(llm=llm, connectors=[connector])
+
+    assert "`mock_tool`" in agent.system_prompt
+    assert "Obsidian" in agent.system_prompt
+    assert "Google Calendar" in agent.system_prompt
+    assert (
+        "fallback" in agent.system_prompt.lower()
+        or "not available" in agent.system_prompt.lower()
+    )

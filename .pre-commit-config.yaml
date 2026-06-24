@@ -22,8 +22,8 @@ repos:
     hooks:
       - id: mypy
         name: mypy
-        entry: uv run mypy
+        entry: uv run mypy src tests
         language: system
         types: [python]
-        # Prevents running mypy on each file individually if multiple are modified
-        pass_filenames: true
+        # Run on the whole codebase to avoid Windows file path bugs in mypy
+        pass_filenames: false
