@@ -1,4 +1,4 @@
-.PHONY: install test test-watch test-cov lint format typecheck run
+.PHONY: install test test-watch test-cov lint format typecheck run gui
 
 install:
 	uv sync
@@ -23,3 +23,6 @@ typecheck:
 
 run:
 	uv run llm_world_interface
+
+gui:
+	uv run chainlit run src/llm_world_interface/app.py

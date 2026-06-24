@@ -39,12 +39,12 @@ class LifeManagerAgent:
             model=self.llm, tools=self.tools, prompt=self.system_prompt
         )
 
-    def run(self, user_input: str) -> str:
+    def run(self, user_input: str, config: Any | None = None) -> str:
         # LangGraph operates on a state dictionary containing a list of messages
         inputs = {"messages": [HumanMessage(content=user_input)]}
 
         # Invoke the graph to completion and get the final state
-        result = self.graph.invoke(inputs)
+        result = self.graph.invoke(inputs, config=config)
 
         # Extract the content of the last AI message
         final_message = result["messages"][-1].content

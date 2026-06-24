@@ -76,3 +76,18 @@ def test_agent_orchestration() -> None:
     # Assert LLM was called at least twice (first for tool, second for completion)
     assert llm.calls_count >= 2
     assert response == "Successfully processed and stored the note."
+
+
+def test_agent_orchestration_with_config() -> None:
+    llm = MockLLM()
+    connector = DummyToolConnector()
+
+    agent = LifeManagerAgent(llm=llm, connectors=[connector])
+
+    # Run agent loop passing a config dictionary
+    config = {"configurable": {"thread_id": "test-session-id"}}
+    response = agent.run("Draft a note on decentralized energy", config=config)
+
+    # Assert LLM was called and response is correct
+    assert llm.calls_count >= 2
+    assert response == "Successfully processed and stored the note."
